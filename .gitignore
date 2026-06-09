@@ -1,0 +1,9 @@
+target/
+*.class
+*.jar
+*.mv.db
+*.mv.trace
+dependency-reduced-pom.xml
+.classpath
+.project
+.settings/
