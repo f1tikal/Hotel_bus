@@ -3,28 +3,24 @@ package com.hotel.desktop.ui;
 import com.hotel.desktop.db.DatabaseManager;
 import com.hotel.desktop.model.Booking;
 import com.hotel.desktop.model.User;
-import java.awt.*;
-import java.awt.geom.RoundRectangle2D;
-import java.util.List;
+
 import javax.swing.*;
-import javax.swing.border.AbstractBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.util.List;
 
 public class BookingManagementPanel extends JPanel {
-
-    // Единая пастельно-бирюзовая цветовая палитра
-    private static final Color BG = new Color(0xE3, 0xEE, 0xF2); // Мягкий фон панели
-    private static final Color CARD_BG = new Color(0xF7, 0xF9, 0xF6); // Плиточный фон контента
-    private static final Color TEXT = new Color(0x7D, 0xA2, 0xA6); // Текст основного тона
-    private static final Color TEXT_SEC = new Color(0x9A, 0xB3, 0xB6); // Вспомогательный текст
-    private static final Color BORDER = new Color(0xC2, 0xDC, 0xDF); // Границы
-
-    // Мягкие статусные цвета
-    private static final Color GREEN = new Color(0x8E, 0xBC, 0x9F); // Пастельный зеленый
-    private static final Color BLUE = new Color(0x8E, 0xAB, 0xBC); // Пастельный синий
-    private static final Color ERROR = new Color(0xD9, 0x8E, 0x8E); // Пастельный красный для предупреждений
+    private static final Color BG = new Color(0xF0, 0xF0, 0xF0);
+    private static final Color CARD_BG = Color.WHITE;
+    private static final Color TEXT = new Color(0x33, 0x33, 0x33);
+    private static final Color TEXT_SEC = new Color(0x88, 0x88, 0x88);
+    private static final Color BORDER = new Color(0xD0, 0xD0, 0xD0);
+    private static final Color GREEN = new Color(0x27, 0xAE, 0x60);
+    private static final Color ORANGE = new Color(0xE6, 0x7E, 0x22);
+    private static final Color BLUE = new Color(0x29, 0x80, 0xB9);
+    private static final Color GRAY = new Color(0x95, 0x95, 0x95);
 
     private final MainFrame mainFrame;
     private final User currentUser;
@@ -44,119 +40,53 @@ public class BookingManagementPanel extends JPanel {
     }
 
     private void initComponents() {
-        setBorder(new EmptyBorder(20, 24, 20, 24));
-
-        // Главный контейнер-карточка со скругленными углами
-        JPanel mainCard = new JPanel(new BorderLayout()) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2d = (Graphics2D) g.create();
-                g2d.setRenderingHint(
-                    RenderingHints.KEY_ANTIALIASING,
-                    RenderingHints.VALUE_ANTIALIAS_ON
-                );
-                g2d.setColor(getBackground());
-                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
-                g2d.dispose();
-            }
-        };
-        mainCard.setBackground(CARD_BG);
-        mainCard.setOpaque(false);
-
-        // Шапка панели управления
         JPanel header = new JPanel(new BorderLayout());
-        header.setOpaque(false);
-        header.setBorder(new EmptyBorder(24, 24, 16, 24));
+        header.setBackground(CARD_BG);
+        header.setBorder(new EmptyBorder(16, 20, 12, 20));
 
-        JLabel title = new JLabel("Управление бронированиями");
-        title.setFont(new Font("Georgia", Font.PLAIN, 20));
+        JLabel title = new JLabel("Управление бронями");
+        title.setFont(new Font("Arial", Font.BOLD, 16));
         title.setForeground(TEXT);
         header.add(title, BorderLayout.WEST);
 
         infoLabel = new JLabel();
-        infoLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        infoLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         infoLabel.setForeground(TEXT_SEC);
         header.add(infoLabel, BorderLayout.EAST);
 
-        mainCard.add(header, BorderLayout.NORTH);
+        add(header, BorderLayout.NORTH);
 
-        // Модель таблицы (запрет редактирования ячеек)
-        tableModel = new DefaultTableModel(
-            new String[] {
-                "№ брони",
-                "Клиент",
-                "Телефон",
-                "Email",
-                "Номер",
-                "Заезд",
-                "Выезд",
-                "Статус",
-            },
-            0
-        ) {
-            @Override
-            public boolean isCellEditable(int row, int col) {
-                return false;
-            }
+        tableModel = new DefaultTableModel(new String[]{
+            "№ брони", "Клиент", "Телефон", "Email", "Номер", "Заезд", "Выезд", "Статус"
+        }, 0) {
+            public boolean isCellEditable(int row, int col) { return false; }
         };
 
         table = new JTable(tableModel);
-        table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        table.setRowHeight(38); // Увеличенная высота для воздушности строк
-        table.setBackground(CARD_BG);
-        table.setForeground(TEXT);
-        table.setSelectionBackground(new Color(0xEB, 0xF2, 0xF2));
-        table.setSelectionForeground(TEXT);
+        table.setFont(new Font("Arial", Font.PLAIN, 12));
+        table.setRowHeight(32);
+        table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 12));
+        table.getTableHeader().setBackground(CARD_BG);
+        table.getTableHeader().setForeground(TEXT);
+        table.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER));
+        table.setBorder(null);
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 0));
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        // Кастомизация заголовков таблицы
-        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
-        table.getTableHeader().setBackground(CARD_BG);
-        table.getTableHeader().setForeground(TEXT_SEC);
-        table.getTableHeader().setReorderingAllowed(false);
-        table
-            .getTableHeader()
-            .setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER));
+        ((DefaultTableCellRenderer) table.getTableHeader().getDefaultRenderer())
+            .setBorder(new EmptyBorder(8, 10, 8, 10));
 
-        // Внутренние отступы для заголовков
-        (
-            (DefaultTableCellRenderer) table
-                .getTableHeader()
-                .getDefaultRenderer()
-        ).setHorizontalAlignment(SwingConstants.LEFT);
-
-        // Кастомный рендеринг ячеек (отступы и чистый цвет)
-        DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(
-                JTable table,
-                Object value,
-                boolean isSelected,
-                boolean hasFocus,
-                int row,
-                int column
-            ) {
-                super.getTableCellRendererComponent(
-                    table,
-                    value,
-                    isSelected,
-                    hasFocus,
-                    row,
-                    column
-                );
-                setBorder(new EmptyBorder(0, 12, 0, 12));
-                if (!isSelected) {
-                    setBackground(CARD_BG);
-                    setForeground(TEXT);
-                }
-                return this;
+        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer() {
+            protected void setValue(Object value) {
+                super.setValue(value);
+                setBorder(new EmptyBorder(4, 10, 4, 10));
+                setBackground(CARD_BG);
+                setForeground(TEXT);
             }
         };
-
         for (int i = 0; i < table.getColumnCount(); i++) {
-            table.getColumnModel().getColumn(i).setCellRenderer(cellRenderer);
+            table.getColumnModel().getColumn(i).setCellRenderer(renderer);
         }
 
         table.getSelectionModel().addListSelectionListener(e -> {
@@ -164,22 +94,27 @@ public class BookingManagementPanel extends JPanel {
         });
 
         JScrollPane scroll = new JScrollPane(table);
-        scroll.setBorder(null);
+        scroll.setBorder(new EmptyBorder(0, 0, 0, 0));
         scroll.getViewport().setBackground(CARD_BG);
 
         JPanel tableWrap = new JPanel(new BorderLayout());
-        tableWrap.setOpaque(false);
-        tableWrap.setBorder(new EmptyBorder(0, 24, 0, 24));
+        tableWrap.setBackground(CARD_BG);
+        tableWrap.setBorder(new EmptyBorder(0, 20, 0, 20));
         tableWrap.add(scroll, BorderLayout.CENTER);
-        mainCard.add(tableWrap, BorderLayout.CENTER);
 
-        // Нижняя панель действий
-        actionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
-        actionPanel.setOpaque(false);
-        actionPanel.setBorder(new EmptyBorder(16, 24, 24, 24));
-        mainCard.add(actionPanel, BorderLayout.SOUTH);
+        JPanel tableContainer = new JPanel(new BorderLayout());
+        tableContainer.setBackground(CARD_BG);
+        tableContainer.add(tableWrap, BorderLayout.CENTER);
+        add(tableContainer, BorderLayout.CENTER);
 
-        add(mainCard, BorderLayout.CENTER);
+        actionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        actionPanel.setBackground(CARD_BG);
+        actionPanel.setBorder(new EmptyBorder(12, 20, 16, 20));
+
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.setBackground(CARD_BG);
+        bottomPanel.add(actionPanel, BorderLayout.CENTER);
+        add(bottomPanel, BorderLayout.SOUTH);
     }
 
     public void loadData() {
@@ -187,23 +122,19 @@ public class BookingManagementPanel extends JPanel {
         tableModel.setRowCount(0);
 
         for (Booking b : bookings) {
-            tableModel.addRow(new Object[] {
-                "#" + b.getId(),
+            tableModel.addRow(new Object[]{
+                b.getId(),
                 b.getUserName(),
                 b.getUserPhone() != null ? b.getUserPhone() : "—",
                 b.getUserEmail() != null ? b.getUserEmail() : "—",
                 b.getRoomInfo(),
-                b.getCheckInDate() != null
-                    ? b.getCheckInDate().toString()
-                    : "—",
-                b.getCheckOutDate() != null
-                    ? b.getCheckOutDate().toString()
-                    : "—",
-                formatStatus(b.getStatus()),
+                b.getCheckInDate() != null ? b.getCheckInDate().toString() : "—",
+                b.getCheckOutDate() != null ? b.getCheckOutDate().toString() : "—",
+                formatStatus(b.getStatus())
             });
         }
 
-        infoLabel.setText("Всего записей: " + bookings.size());
+        infoLabel.setText("Всего броней: " + bookings.size());
         updateActionButtons();
     }
 
@@ -219,10 +150,8 @@ public class BookingManagementPanel extends JPanel {
         actionPanel.removeAll();
         int row = table.getSelectedRow();
         if (row < 0) {
-            JLabel hint = new JLabel(
-                "Выберите бронирование из таблицы для управления статусом"
-            );
-            hint.setFont(new Font("Segoe UI", Font.ITALIC, 13));
+            JLabel hint = new JLabel("Выберите бронь из таблицы");
+            hint.setFont(new Font("Arial", Font.PLAIN, 12));
             hint.setForeground(TEXT_SEC);
             actionPanel.add(hint);
             actionPanel.revalidate();
@@ -233,30 +162,28 @@ public class BookingManagementPanel extends JPanel {
         Booking b = bookings.get(row);
 
         if (b.canConfirm()) {
-            JButton confirmBtn = createStyledButton("Подтвердить", GREEN);
+            JButton confirmBtn = actionButton("Подтвердить", GREEN);
             confirmBtn.addActionListener(e -> confirmBooking(b));
             actionPanel.add(confirmBtn);
         }
 
         if (b.canMarkPaid() && currentUser.isAdmin()) {
-            JButton paidBtn = createStyledButton("Отметить оплату", BLUE);
+            JButton paidBtn = actionButton("Оплачен", BLUE);
             paidBtn.addActionListener(e -> markPaid(b));
             actionPanel.add(paidBtn);
         }
 
         if (b.canMarkPaid() && !currentUser.isAdmin()) {
             JLabel restricted = new JLabel(
-                "<html><span style='color:#D98E8E; font-size:12px; font-weight:500;'>" +
-                    "• Недостаточно прав для отметки оплаты (требуется Администратор)</span></html>"
-            );
+                "<html><span style='color:#c0392b;font-size:11px;'>"
+                + "У вашей роли нет прав на установку статуса «оплачен». "
+                + "Только администратор может отметить оплату</span></html>");
             actionPanel.add(restricted);
         }
 
         if (actionPanel.getComponentCount() == 0) {
-            JLabel done = new JLabel(
-                "Для выбранного бронирования нет доступных действий"
-            );
-            done.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+            JLabel done = new JLabel("Нет доступных действий для этой брони");
+            done.setFont(new Font("Arial", Font.PLAIN, 12));
             done.setForeground(TEXT_SEC);
             actionPanel.add(done);
         }
@@ -266,181 +193,62 @@ public class BookingManagementPanel extends JPanel {
     }
 
     private void confirmBooking(Booking b) {
-        DatabaseManager.getInstance().updateBookingStatus(
-            b.getId(),
-            Booking.STATUS_CONFIRMED
-        );
-        showNotification("Бронь №" + b.getId() + " успешно подтверждена");
+        DatabaseManager.getInstance().updateBookingStatus(b.getId(), Booking.STATUS_CONFIRMED);
+        showNotification("Бронь №" + b.getId() + " подтверждена");
         loadData();
     }
 
     private void markPaid(Booking b) {
-        DatabaseManager.getInstance().updateBookingStatus(
-            b.getId(),
-            Booking.STATUS_PAID
-        );
-        showNotification(
-            "Статус брони №" + b.getId() + " изменён на «Оплачен»"
-        );
+        DatabaseManager.getInstance().updateBookingStatus(b.getId(), Booking.STATUS_PAID);
+        showNotification("Статус брони №" + b.getId() + " изменён на «оплачен»");
         loadData();
     }
 
-    // Изящная капсульная контурная кнопка
-    private JButton createStyledButton(String text, Color baseColor) {
-        JButton btn = new JButton(text) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2d = (Graphics2D) g.create();
-                g2d.setRenderingHint(
-                    RenderingHints.KEY_ANTIALIASING,
-                    RenderingHints.VALUE_ANTIALIAS_ON
-                );
-
-                // Эффект Hover изменения фона
-                if (getModel().isRollover()) {
-                    g2d.setColor(
-                        new Color(
-                            baseColor.getRed(),
-                            baseColor.getGreen(),
-                            baseColor.getBlue(),
-                            30
-                        )
-                    );
-                    g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 25, 25);
-                }
-
-                g2d.setColor(baseColor);
-                g2d.setStroke(new BasicStroke(1.5f));
-                g2d.draw(
-                    new RoundRectangle2D.Float(
-                        1,
-                        1,
-                        getWidth() - 3,
-                        getHeight() - 3,
-                        25,
-                        25
-                    )
-                );
-                g2d.dispose();
-                super.paintComponent(g);
-            }
-        };
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        btn.setForeground(baseColor);
+    private JButton actionButton(String text, Color color) {
+        JButton btn = new JButton(text);
+        btn.setFont(new Font("Arial", Font.PLAIN, 12));
+        btn.setForeground(color);
+        btn.setBackground(CARD_BG);
+        btn.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(color, 1),
+            new EmptyBorder(7, 18, 7, 18)
+        ));
         btn.setFocusPainted(false);
-        btn.setContentAreaFilled(false);
-        btn.setBorderPainted(false);
-        btn.setBorder(new EmptyBorder(10, 20, 10, 20));
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         return btn;
     }
 
-    // Центрированное минималистичное диалоговое окно уведомлений
     private void showNotification(String message) {
         JDialog dialog = new JDialog(mainFrame, "", true);
         dialog.setUndecorated(true);
-
-        JPanel content = new JPanel(new BorderLayout(0, 16)) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2d = (Graphics2D) g.create();
-                g2d.setRenderingHint(
-                    RenderingHints.KEY_ANTIALIASING,
-                    RenderingHints.VALUE_ANTIALIAS_ON
-                );
-                g2d.setColor(getBackground());
-                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 24, 24);
-                g2d.dispose();
-            }
-        };
+        JPanel content = new JPanel(new BorderLayout(0, 12));
         content.setBackground(CARD_BG);
-        content.setOpaque(false);
-        content.setBorder(
-            BorderFactory.createCompoundBorder(
-                new RoundBorder(BORDER, 24),
-                new EmptyBorder(24, 32, 20, 32)
-            )
-        );
-
+        content.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(BORDER, 1),
+            new EmptyBorder(24, 32, 24, 32)
+        ));
         JLabel msg = new JLabel(message, SwingConstants.CENTER);
-        msg.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        msg.setFont(new Font("Arial", Font.PLAIN, 13));
         msg.setForeground(TEXT);
         content.add(msg, BorderLayout.CENTER);
-
-        // Капсульная кнопка подтверждения внутри уведомления
-        JButton okBtn = new JButton("Прекрасно") {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2d = (Graphics2D) g.create();
-                g2d.setRenderingHint(
-                    RenderingHints.KEY_ANTIALIASING,
-                    RenderingHints.VALUE_ANTIALIAS_ON
-                );
-                g2d.setColor(getBackground());
-                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
-                g2d.dispose();
-                super.paintComponent(g);
-            }
-        };
-        okBtn.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        okBtn.setForeground(Color.WHITE);
-        okBtn.setBackground(TEXT);
-        okBtn.setContentAreaFilled(false);
-        okBtn.setBorderPainted(false);
+        JButton okBtn = new JButton("OK");
+        okBtn.setFont(new Font("Arial", Font.PLAIN, 12));
+        okBtn.setForeground(TEXT);
+        okBtn.setBackground(CARD_BG);
+        okBtn.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(BORDER, 1),
+            new EmptyBorder(6, 24, 6, 24)
+        ));
         okBtn.setFocusPainted(false);
-        okBtn.setBorder(new EmptyBorder(8, 24, 8, 24));
         okBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         okBtn.addActionListener(e -> dialog.dispose());
-
-        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        btnRow.setOpaque(false);
+        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        btnRow.setBackground(CARD_BG);
         btnRow.add(okBtn);
         content.add(btnRow, BorderLayout.SOUTH);
-
         dialog.add(content);
         dialog.pack();
         dialog.setLocationRelativeTo(mainFrame);
         dialog.setVisible(true);
-    }
-
-    // Класс для прорисовки плавных границ компонентов
-    private static class RoundBorder extends AbstractBorder {
-
-        private final Color color;
-        private final int radii;
-
-        RoundBorder(Color color, int radii) {
-            this.color = color;
-            this.radii = radii;
-        }
-
-        @Override
-        public void paintBorder(
-            Component c,
-            Graphics g,
-            int x,
-            int y,
-            int width,
-            int height
-        ) {
-            Graphics2D g2d = (Graphics2D) g.create();
-            g2d.setRenderingHint(
-                RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON
-            );
-            g2d.setColor(color);
-            g2d.setStroke(new BasicStroke(1.5f));
-            g2d.draw(
-                new RoundRectangle2D.Float(
-                    x + 1,
-                    y + 1,
-                    width - 3,
-                    height - 3,
-                    radii,
-                    radii
-                )
-            );
-            g2d.dispose();
-        }
     }
 }
