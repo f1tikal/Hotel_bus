@@ -28,6 +28,8 @@ public class MainFrame extends JFrame {
     private RegisterPanel registerPanel;
     private JPanel dashboardPanel;
     private User currentUser;
+    private NewBookingsPanel newBookingsPanel;
+    private RoomsManagementPanel roomsManagementPanel;
 
     public MainFrame() {
         setTitle("Отель - Бронирование номеров");
@@ -281,19 +283,21 @@ public class MainFrame extends JFrame {
         sidebar.add(topSep, sc);
 
         String[][] items = user.isAdmin()
-            ? new String[][] {
-                  { "bookings", "📅  Бронирования" },
-                  { "rooms", "🏨  Номера" },
-                  { "reviews", "⭐  Отзывы" },
-                  { "payments", "💰  Платежи" },
-                  { "users", "👥  Сотрудники" },
-              }
-            : new String[][] {
-                  { "bookings", "📅  Бронирования" },
-                  { "rooms", "🏨  Номера" },
-                  { "reviews", "⭐  Отзывы" },
-                  { "payments", "💰  Платежи" },
-              };
+                ? new String[][] {
+                { "newBookings", "🔔  Новые брони" },
+                { "bookings", "📅  Бронирования" },
+                { "rooms", "🏨  Номера" },
+                { "reviews", "⭐  Отзывы" },
+                { "payments", "💰  Платежи" },
+                { "users", "👥  Сотрудники" },
+        }
+                : new String[][] {
+                { "newBookings", "🔔  Новые брони" },
+                { "bookings", "📅  Бронирования" },
+                { "rooms", "🏨  Номера" },
+                { "reviews", "⭐  Отзывы" },
+                { "payments", "💰  Платежи" },
+        };
 
         CardLayout contentCards = new CardLayout();
         JPanel contentArea = new JPanel(contentCards);
@@ -307,6 +311,10 @@ public class MainFrame extends JFrame {
             user
         );
         contentArea.add(bookingPanel, "bookings");
+        newBookingsPanel = new NewBookingsPanel(this);
+        contentArea.add(newBookingsPanel, "newBookings");
+        roomsManagementPanel = new RoomsManagementPanel(this);
+        contentArea.add(roomsManagementPanel, "rooms");
         contentCards.show(contentArea, "welcome");
 
         int btnIndex = 0;
@@ -318,12 +326,14 @@ public class MainFrame extends JFrame {
                 if ("bookings".equals(key)) {
                     bookingPanel.loadData();
                     contentCards.show(contentArea, "bookings");
+                } else if ("newBookings".equals(key)) {
+                    newBookingsPanel.refreshData();
+                    contentCards.show(contentArea, "newBookings");
+                } else if ("rooms".equals(key)) {
+                    roomsManagementPanel.loadData();
+                    contentCards.show(contentArea, "rooms");
                 } else {
-                    showNotification(
-                        "Раздел \"" +
-                            label.substring(3) +
-                            "\" находится в разработке."
-                    );
+                    showNotification("Раздел \"" + label.substring(3) + "\" находится в разработке.");
                 }
             });
             sc.gridy = 4 + btnIndex;
