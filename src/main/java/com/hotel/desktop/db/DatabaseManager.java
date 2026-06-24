@@ -200,6 +200,52 @@ public class DatabaseManager {
             throw new RuntimeException("Failed to update booking status", e);
         }
     }
+    public List<Booking> getPendingBookings() {
+        List<Booking> list = new ArrayList<>();
+        String sql = "SELECT b.*, u.full_name AS user_name, u.phone AS user_phone, u.email AS user_email, r.comfort_level || ' №' || r.room_id AS room_info FROM bookings b JOIN users u ON u.user_id = b.user_id JOIN rooms r ON r.room_id = b.room_id WHERE b.status = 'не подтверждён' ORDER BY b.booking_date DESC";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapBooking(rs));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public void addRoom(Room room) {
+        String sql = "INSERT INTO rooms (capacity, comfort_level, price_per_night) VALUES (?, ?, ?)";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, room.getCapacity());
+            ps.setString(2, room.getComfortLevel());
+            ps.setBigDecimal(3, room.getPricePerNight());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void updateRoom(Room room) {
+        String sql = "UPDATE rooms SET capacity = ?, comfort_level = ?, price_per_night = ? WHERE room_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, room.getCapacity());
+            ps.setString(2, room.getComfortLevel());
+            ps.setBigDecimal(3, room.getPricePerNight());
+            ps.setLong(4, room.getId());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void deleteRoom(long roomId) {
+        String sql = "DELETE FROM rooms WHERE room_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setLong(1, roomId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private Booking mapBooking(ResultSet rs) throws SQLException {
         Booking b = new Booking();
