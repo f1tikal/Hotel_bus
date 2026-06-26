@@ -1,5 +1,6 @@
 package com.hotel.desktop.ui;
 
+import com.hotel.desktop.ui.ReportPanel;
 import com.hotel.desktop.model.User;
 import java.awt.*;
 import javax.swing.*;
@@ -34,14 +35,14 @@ public class MainFrame extends JFrame {
     public MainFrame() {
         setTitle("Отель - Бронирование номеров");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(580, 680); // Немного увеличили ширину для лучшего баланса с сайдбаром
+        setSize(580, 680);
         setLocationRelativeTo(null);
         setResizable(true);
         setMinimumSize(new Dimension(450, 550));
 
         try {
             UIManager.setLookAndFeel(
-                UIManager.getCrossPlatformLookAndFeelClassName()
+                    UIManager.getCrossPlatformLookAndFeelClassName()
             );
         } catch (Exception e) {
             e.printStackTrace();
@@ -75,8 +76,8 @@ public class MainFrame extends JFrame {
             mainPanel.remove(dashboardPanel);
         }
         dashboardPanel = user.isStaff()
-            ? createStaffDashboard(user)
-            : createUserDashboard(user);
+                ? createStaffDashboard(user)
+                : createUserDashboard(user);
         mainPanel.add(dashboardPanel, "dashboard");
         cardLayout.show(mainPanel, "dashboard");
     }
@@ -93,8 +94,8 @@ public class MainFrame extends JFrame {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2d = (Graphics2D) g.create();
                 g2d.setRenderingHint(
-                    RenderingHints.KEY_ANTIALIASING,
-                    RenderingHints.VALUE_ANTIALIAS_ON
+                        RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON
                 );
                 g2d.setColor(getBackground());
                 g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 40, 40);
@@ -118,8 +119,8 @@ public class MainFrame extends JFrame {
         card.add(avatarPanel, c);
 
         JLabel title = new JLabel(
-            "Информация о профиле",
-            SwingConstants.CENTER
+                "Информация о профиле",
+                SwingConstants.CENTER
         );
         title.setFont(new Font("Georgia", Font.PLAIN, 20));
         title.setForeground(TEXT);
@@ -161,8 +162,8 @@ public class MainFrame extends JFrame {
             String[] parts = fullName.trim().split(" ");
             if (parts.length >= 2) {
                 raw =
-                    String.valueOf(parts[0].charAt(0)) +
-                    String.valueOf(parts[1].charAt(0));
+                        String.valueOf(parts[0].charAt(0)) +
+                                String.valueOf(parts[1].charAt(0));
             } else {
                 raw = String.valueOf(fullName.charAt(0));
             }
@@ -174,8 +175,8 @@ public class MainFrame extends JFrame {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2d = (Graphics2D) g.create();
                 g2d.setRenderingHint(
-                    RenderingHints.KEY_ANTIALIASING,
-                    RenderingHints.VALUE_ANTIALIAS_ON
+                        RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON
                 );
                 g2d.setColor(ACCENT);
                 g2d.fillOval(0, 0, 75, 75);
@@ -185,9 +186,9 @@ public class MainFrame extends JFrame {
                 int textWidth = fm.stringWidth(initials);
                 int textHeight = fm.getAscent();
                 g2d.drawString(
-                    initials,
-                    (75 - textWidth) / 2,
-                    (75 + textHeight) / 2 - 3
+                        initials,
+                        (75 - textWidth) / 2,
+                        (75 + textHeight) / 2 - 3
                 );
                 g2d.dispose();
             }
@@ -202,11 +203,11 @@ public class MainFrame extends JFrame {
     }
 
     private int addInfoRow(
-        JPanel panel,
-        GridBagConstraints c,
-        int row,
-        String label,
-        String value
+            JPanel panel,
+            GridBagConstraints c,
+            int row,
+            String label,
+            String value
     ) {
         JLabel lbl = new JLabel(label);
         lbl.setFont(new Font("Segoe UI", Font.PLAIN, 13));
@@ -217,7 +218,7 @@ public class MainFrame extends JFrame {
         panel.add(lbl, c);
 
         JLabel val = new JLabel(
-            value != null && !value.isEmpty() ? value : "—"
+                value != null && !value.isEmpty() ? value : "—"
         );
         val.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         val.setForeground(TEXT);
@@ -241,7 +242,7 @@ public class MainFrame extends JFrame {
         JScrollPane sidebarScroll = new JScrollPane(sidebar);
         sidebarScroll.setBorder(null);
         sidebarScroll.setHorizontalScrollBarPolicy(
-            JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
         );
         sidebarScroll.setPreferredSize(new Dimension(220, 0));
 
@@ -282,10 +283,12 @@ public class MainFrame extends JFrame {
         sc.gridy = 3;
         sidebar.add(topSep, sc);
 
+        // Полный объединенный список элементов меню для администратора и менеджера
         String[][] items = user.isAdmin()
                 ? new String[][] {
                 { "newBookings", "🔔  Новые брони" },
                 { "bookings", "📅  Бронирования" },
+                { "reports", "📊  Отчёты за день" },
                 { "rooms", "🏨  Номера" },
                 { "reviews", "⭐  Отзывы" },
                 { "payments", "💰  Платежи" },
@@ -294,6 +297,7 @@ public class MainFrame extends JFrame {
                 : new String[][] {
                 { "newBookings", "🔔  Новые брони" },
                 { "bookings", "📅  Бронирования" },
+                { "reports", "📊  Отчёты за день" },
                 { "rooms", "🏨  Номера" },
                 { "reviews", "⭐  Отзывы" },
                 { "payments", "💰  Платежи" },
@@ -306,15 +310,18 @@ public class MainFrame extends JFrame {
         JPanel welcomePanel = createWelcomePanel(user);
         contentArea.add(welcomePanel, "welcome");
 
-        BookingManagementPanel bookingPanel = new BookingManagementPanel(
-            this,
-            user
-        );
+        BookingManagementPanel bookingPanel = new BookingManagementPanel(this, user);
         contentArea.add(bookingPanel, "bookings");
+
         newBookingsPanel = new NewBookingsPanel(this);
         contentArea.add(newBookingsPanel, "newBookings");
+
         roomsManagementPanel = new RoomsManagementPanel(this);
         contentArea.add(roomsManagementPanel, "rooms");
+
+        ReportPanel reportPanel = new ReportPanel(this, user);
+        contentArea.add(reportPanel, "reports");
+
         contentCards.show(contentArea, "welcome");
 
         int btnIndex = 0;
@@ -332,12 +339,15 @@ public class MainFrame extends JFrame {
                 } else if ("rooms".equals(key)) {
                     roomsManagementPanel.loadData();
                     contentCards.show(contentArea, "rooms");
+                } else if ("reports".equals(key)) {
+                    reportPanel.loadReportData();
+                    contentCards.show(contentArea, "reports");
                 } else {
                     showNotification("Раздел \"" + label.substring(3) + "\" находится в разработке.");
                 }
             });
             sc.gridy = 4 + btnIndex;
-            sc.insets = new Insets(4, 10, 4, 10); // Сделали внутренние отступы для кнопок
+            sc.insets = new Insets(4, 10, 4, 10);
             sidebar.add(btn, sc);
             btnIndex++;
         }
@@ -362,7 +372,7 @@ public class MainFrame extends JFrame {
         contentWrapper.setBorder(new EmptyBorder(15, 15, 15, 15));
         contentWrapper.add(contentArea, BorderLayout.CENTER);
 
-        panel.add(sidebarScroll, BorderLayout.WEST); // Сайдбар перемещен налево для классического UX
+        panel.add(sidebarScroll, BorderLayout.WEST);
         panel.add(contentWrapper, BorderLayout.CENTER);
         return panel;
     }
@@ -373,13 +383,13 @@ public class MainFrame extends JFrame {
         panel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         JLabel welcome = new JLabel(
-            "Добро пожаловать, " + user.getFullName() + "!"
+                "Добро пожаловать, " + user.getFullName() + "!"
         );
         welcome.setFont(new Font("Georgia", Font.PLAIN, 22));
         welcome.setForeground(TEXT);
 
         JLabel hint = new JLabel(
-            "Выберите нужный пункт меню в левой панели для начала работы."
+                "Выберите нужный пункт меню в левой панели для начала работы."
         );
         hint.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         hint.setForeground(TEXT_SEC);
@@ -394,10 +404,10 @@ public class MainFrame extends JFrame {
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(HEADER_BG);
         header.setBorder(
-            BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER),
-                new EmptyBorder(16, 24, 16, 24)
-            )
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER),
+                        new EmptyBorder(16, 24, 16, 24)
+                )
         );
 
         JLabel label = new JLabel(title);
@@ -414,11 +424,11 @@ public class MainFrame extends JFrame {
                 if (getBackground() == SIDEBAR_HOVER) {
                     Graphics2D g2d = (Graphics2D) g.create();
                     g2d.setRenderingHint(
-                        RenderingHints.KEY_ANTIALIASING,
-                        RenderingHints.VALUE_ANTIALIAS_ON
+                            RenderingHints.KEY_ANTIALIASING,
+                            RenderingHints.VALUE_ANTIALIAS_ON
                     );
                     g2d.setColor(getBackground());
-                    g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16); // Мягкие подложки активных пунктов
+                    g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
                     g2d.dispose();
                 }
                 super.paintComponent(g);
@@ -435,30 +445,29 @@ public class MainFrame extends JFrame {
         btn.setOpaque(false);
 
         btn.addMouseListener(
-            new java.awt.event.MouseAdapter() {
-                public void mouseEntered(java.awt.event.MouseEvent e) {
-                    btn.setBackground(SIDEBAR_HOVER);
-                    btn.setForeground(ACCENT_HOVER);
-                }
+                new java.awt.event.MouseAdapter() {
+                    public void mouseEntered(java.awt.event.MouseEvent e) {
+                        btn.setBackground(SIDEBAR_HOVER);
+                        btn.setForeground(ACCENT_HOVER);
+                    }
 
-                public void mouseExited(java.awt.event.MouseEvent e) {
-                    btn.setBackground(SIDEBAR);
-                    btn.setForeground(TEXT);
+                    public void mouseExited(java.awt.event.MouseEvent e) {
+                        btn.setBackground(SIDEBAR);
+                        btn.setForeground(TEXT);
+                    }
                 }
-            }
         );
         return btn;
     }
 
-    // Кастомные круглые капсульные кнопки (Вторичные и Главные)
     private JButton createStyledButton(String text, boolean primary) {
         JButton btn = new JButton(text) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2d = (Graphics2D) g.create();
                 g2d.setRenderingHint(
-                    RenderingHints.KEY_ANTIALIASING,
-                    RenderingHints.VALUE_ANTIALIAS_ON
+                        RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON
                 );
                 g2d.setColor(getBackground());
                 g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 35, 35);
@@ -477,41 +486,40 @@ public class MainFrame extends JFrame {
             btn.setForeground(Color.WHITE);
             btn.setBorderPainted(false);
             btn.addMouseListener(
-                new java.awt.event.MouseAdapter() {
-                    public void mouseEntered(java.awt.event.MouseEvent e) {
-                        btn.setBackground(ACCENT_HOVER);
-                    }
+                    new java.awt.event.MouseAdapter() {
+                        public void mouseEntered(java.awt.event.MouseEvent e) {
+                            btn.setBackground(ACCENT_HOVER);
+                        }
 
-                    public void mouseExited(java.awt.event.MouseEvent e) {
-                        btn.setBackground(ACCENT);
+                        public void mouseExited(java.awt.event.MouseEvent e) {
+                            btn.setBackground(ACCENT);
+                        }
                     }
-                }
             );
         } else {
             btn.setBackground(Color.WHITE);
             btn.setForeground(TEXT);
             btn.setBorder(
-                BorderFactory.createCompoundBorder(
-                    new RoundBorder(BORDER, 35),
-                    new EmptyBorder(10, 22, 10, 22)
-                )
+                    BorderFactory.createCompoundBorder(
+                            new RoundBorder(BORDER, 35),
+                            new EmptyBorder(10, 22, 10, 22)
+                    )
             );
             btn.addMouseListener(
-                new java.awt.event.MouseAdapter() {
-                    public void mouseEntered(java.awt.event.MouseEvent e) {
-                        btn.setBackground(SIDEBAR);
-                    }
+                    new java.awt.event.MouseAdapter() {
+                        public void mouseEntered(java.awt.event.MouseEvent e) {
+                            btn.setBackground(SIDEBAR);
+                        }
 
-                    public void mouseExited(java.awt.event.MouseEvent e) {
-                        btn.setBackground(Color.WHITE);
+                        public void mouseExited(java.awt.event.MouseEvent e) {
+                            btn.setBackground(Color.WHITE);
+                        }
                     }
-                }
             );
         }
         return btn;
     }
 
-    // Круглое кастомное уведомление
     public void showNotification(String message) {
         JDialog dialog = new JDialog(this, "", true);
         dialog.setUndecorated(true);
@@ -521,8 +529,8 @@ public class MainFrame extends JFrame {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2d = (Graphics2D) g.create();
                 g2d.setRenderingHint(
-                    RenderingHints.KEY_ANTIALIASING,
-                    RenderingHints.VALUE_ANTIALIAS_ON
+                        RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON
                 );
                 g2d.setColor(getBackground());
                 g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
@@ -532,10 +540,10 @@ public class MainFrame extends JFrame {
         content.setBackground(CARD_BG);
         content.setOpaque(false);
         content.setBorder(
-            BorderFactory.createCompoundBorder(
-                new RoundBorder(BORDER, 30),
-                new EmptyBorder(25, 35, 25, 35)
-            )
+                BorderFactory.createCompoundBorder(
+                        new RoundBorder(BORDER, 30),
+                        new EmptyBorder(25, 35, 25, 35)
+                )
         );
 
         JLabel msgLabel = new JLabel(message, SwingConstants.CENTER);
@@ -557,9 +565,7 @@ public class MainFrame extends JFrame {
         dialog.setVisible(true);
     }
 
-    // Класс для рисования гладких круглых контуров компонентов
     private static class RoundBorder extends AbstractBorder {
-
         private final Color color;
         private final int radii;
 
@@ -570,27 +576,27 @@ public class MainFrame extends JFrame {
 
         @Override
         public void paintBorder(
-            Component c,
-            Graphics g,
-            int x,
-            int y,
-            int width,
-            int height
+                Component c,
+                Graphics g,
+                int x,
+                int y,
+                int width,
+                int height
         ) {
             Graphics2D g2d = (Graphics2D) g.create();
             g2d.setRenderingHint(
-                RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON
+                    RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON
             );
             g2d.setColor(color);
             g2d.setStroke(new BasicStroke(1.5f));
             g2d.drawRoundRect(
-                x + 1,
-                y + 1,
-                width - 3,
-                height - 3,
-                radii,
-                radii
+                    x + 1,
+                    y + 1,
+                    width - 3,
+                    height - 3,
+                    radii,
+                    radii
             );
             g2d.dispose();
         }
