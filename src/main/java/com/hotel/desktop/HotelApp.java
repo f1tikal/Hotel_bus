@@ -15,7 +15,7 @@ public class HotelApp {
             System.out.println("   (Подключение: JDBC URL: jdbc:h2:file:./hotel_data, User: sa, Password: )");
         } catch (Exception e) {
             System.err.println(" Не удалось запустить H2 Console: " + e.getMessage());
-            // Ошибка не критична — продолжаем запуск приложения
+
         }
 
         // Запуск основного GUI
