@@ -121,11 +121,11 @@ public class DatabaseManager {
             if (rs.next() && rs.getInt(1) > 0) return;
         }
         String[][] data = {
-            {"1", "Стандарт", "2500"}, {"2", "Стандарт", "3000"},
-            {"2", "Комфорт", "4500"}, {"3", "Комфорт", "5500"},
-            {"2", "Люкс", "8500"}, {"4", "Люкс", "12000"},
-            {"6", "Семейный", "7000"}, {"3", "Стандарт", "3500"},
-            {"1", "Эконом", "1500"}, {"2", "Эконом", "2000"}
+                {"1", "Стандарт", "2500"}, {"2", "Стандарт", "3000"},
+                {"2", "Комфорт", "4500"}, {"3", "Комфорт", "5500"},
+                {"2", "Люкс", "8500"}, {"4", "Люкс", "12000"},
+                {"6", "Семейный", "7000"}, {"3", "Стандарт", "3500"},
+                {"1", "Эконом", "1500"}, {"2", "Эконом", "2000"}
         };
         String sql = "INSERT INTO rooms (capacity, comfort_level, price_per_night) VALUES (?, ?, ?)";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -200,6 +200,8 @@ public class DatabaseManager {
             throw new RuntimeException("Failed to update booking status", e);
         }
     }
+
+    // Получение списка бронирований со статусом ожидания подтверждения
     public List<Booking> getPendingBookings() {
         List<Booking> list = new ArrayList<>();
         String sql = "SELECT b.*, u.full_name AS user_name, u.phone AS user_phone, u.email AS user_email, r.comfort_level || ' №' || r.room_id AS room_info FROM bookings b JOIN users u ON u.user_id = b.user_id JOIN rooms r ON r.room_id = b.room_id WHERE b.status = 'не подтверждён' ORDER BY b.booking_date DESC";
@@ -212,6 +214,7 @@ public class DatabaseManager {
         return list;
     }
 
+    // Добавление новой комнаты в базу данных
     public void addRoom(Room room) {
         String sql = "INSERT INTO rooms (capacity, comfort_level, price_per_night) VALUES (?, ?, ?)";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -224,6 +227,7 @@ public class DatabaseManager {
         }
     }
 
+    // Обновление параметров существующей комнаты
     public void updateRoom(Room room) {
         String sql = "UPDATE rooms SET capacity = ?, comfort_level = ?, price_per_night = ? WHERE room_id = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -237,6 +241,7 @@ public class DatabaseManager {
         }
     }
 
+    // Удаление комнаты по её идентификатору
     public void deleteRoom(long roomId) {
         String sql = "DELETE FROM rooms WHERE room_id = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -245,6 +250,54 @@ public class DatabaseManager {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    // Создание новой записи бронирования
+    public void addBooking(long userId, long roomId, LocalDate checkIn, LocalDate checkOut) {
+        String sql = "INSERT INTO bookings (user_id, room_id, check_in_date, check_out_date, status, booking_date) VALUES (?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            ps.setLong(2, roomId);
+            ps.setDate(3, Date.valueOf(checkIn));
+            ps.setDate(4, Date.valueOf(checkOut));
+            ps.setString(5, Booking.STATUS_PENDING);
+            ps.setTimestamp(6, Timestamp.valueOf(LocalDateTime.now()));
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Не удалось добавить бронирование", e);
+        }
+    }
+
+    // Удаление записи бронирования из базы данных
+    public void deleteBooking(long bookingId) {
+        String sql = "DELETE FROM bookings WHERE booking_id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setLong(1, bookingId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Не удалось удалить бронирование", e);
+        }
+    }
+
+    // Получение списка всех зарегистрированных клиентов
+    public List<User> getAllClients() {
+        List<User> list = new ArrayList<>();
+        String sql = "SELECT * FROM users WHERE role = 'ROLE_USER' ORDER BY last_name";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                User u = new User();
+                u.setId(rs.getLong("user_id"));
+                u.setLastName(rs.getString("last_name"));
+                u.setFirstName(rs.getString("first_name"));
+                u.setMiddleName(rs.getString("middle_name"));
+                u.setLogin(rs.getString("login"));
+                list.add(u);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     private Booking mapBooking(ResultSet rs) throws SQLException {
@@ -266,7 +319,7 @@ public class DatabaseManager {
         return b;
     }
 
-    // ===== User methods (unchanged) =====
+    // ===== Методы работы с пользователями =====
 
     public User findByLogin(String login) {
         return findUserBy("login", login);
@@ -363,6 +416,39 @@ public class DatabaseManager {
         Timestamp ts = rs.getTimestamp("created_at");
         if (ts != null) user.setCreatedAt(ts.toLocalDateTime());
         return user;
+    }
+
+    // Генерация ежедневного операционного отчета за указанную дату
+    public List<Object[]> getDailyReport(LocalDate date) {
+        List<Object[]> list = new ArrayList<>();
+        String sql = "SELECT b.booking_date, 'Оформление брони' AS op_type, r.room_id AS room_number, " +
+                "u.last_name || ' ' || SUBSTRING(u.first_name, 1, 1) || '.' AS client_name, " +
+                "COALESCE(m.last_name || ' ' || SUBSTRING(m.first_name, 1, 1) || '.', 'Клиент (онлайн)') AS manager_name, " +
+                "r.price_per_night " +
+                "FROM bookings b " +
+                "JOIN users u ON b.user_id = u.user_id " +
+                "JOIN rooms r ON b.room_id = r.room_id " +
+                "LEFT JOIN users m ON b.user_id = m.user_id AND m.role IN ('ROLE_MANAGER', 'ROLE_ADMIN') " +
+                "WHERE CAST(b.booking_date AS DATE) = ? " +
+                "ORDER BY b.booking_date DESC";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(date));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(new Object[] {
+                        rs.getTimestamp("booking_date").toLocalDateTime().toLocalTime().toString().substring(0, 5),
+                        rs.getString("op_type"),
+                        "№ " + rs.getString("room_number"),
+                        rs.getString("client_name"),
+                        rs.getString("manager_name"),
+                        rs.getBigDecimal("price_per_night").doubleValue()
+                });
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     public void close() {

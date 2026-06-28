@@ -5,6 +5,7 @@ import com.hotel.desktop.model.Booking;
 import com.hotel.desktop.model.User;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
+import java.time.LocalDate; // ДОБАВИЛИ ИМПОРТ ДЛЯ РАБОТЫ С ДАТАМИ
 import java.util.List;
 import javax.swing.*;
 import javax.swing.border.AbstractBorder;
@@ -52,8 +53,8 @@ public class BookingManagementPanel extends JPanel {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2d = (Graphics2D) g.create();
                 g2d.setRenderingHint(
-                    RenderingHints.KEY_ANTIALIASING,
-                    RenderingHints.VALUE_ANTIALIAS_ON
+                        RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON
                 );
                 g2d.setColor(getBackground());
                 g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
@@ -82,17 +83,17 @@ public class BookingManagementPanel extends JPanel {
 
         // Модель таблицы (запрет редактирования ячеек)
         tableModel = new DefaultTableModel(
-            new String[] {
-                "№ брони",
-                "Клиент",
-                "Телефон",
-                "Email",
-                "Номер",
-                "Заезд",
-                "Выезд",
-                "Статус",
-            },
-            0
+                new String[] {
+                        "№ брони",
+                        "Клиент",
+                        "Телефон",
+                        "Email",
+                        "Номер",
+                        "Заезд",
+                        "Выезд",
+                        "Статус",
+                },
+                0
         ) {
             @Override
             public boolean isCellEditable(int row, int col) {
@@ -117,34 +118,34 @@ public class BookingManagementPanel extends JPanel {
         table.getTableHeader().setForeground(TEXT_SEC);
         table.getTableHeader().setReorderingAllowed(false);
         table
-            .getTableHeader()
-            .setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER));
+                .getTableHeader()
+                .setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER));
 
         // Внутренние отступы для заголовков
         (
-            (DefaultTableCellRenderer) table
-                .getTableHeader()
-                .getDefaultRenderer()
+                (DefaultTableCellRenderer) table
+                        .getTableHeader()
+                        .getDefaultRenderer()
         ).setHorizontalAlignment(SwingConstants.LEFT);
 
         // Кастомный рендеринг ячеек (отступы и чистый цвет)
         DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(
-                JTable table,
-                Object value,
-                boolean isSelected,
-                boolean hasFocus,
-                int row,
-                int column
+                    JTable table,
+                    Object value,
+                    boolean isSelected,
+                    boolean hasFocus,
+                    int row,
+                    int column
             ) {
                 super.getTableCellRendererComponent(
-                    table,
-                    value,
-                    isSelected,
-                    hasFocus,
-                    row,
-                    column
+                        table,
+                        value,
+                        isSelected,
+                        hasFocus,
+                        row,
+                        column
                 );
                 setBorder(new EmptyBorder(0, 12, 0, 12));
                 if (!isSelected) {
@@ -188,18 +189,18 @@ public class BookingManagementPanel extends JPanel {
 
         for (Booking b : bookings) {
             tableModel.addRow(new Object[] {
-                "#" + b.getId(),
-                b.getUserName(),
-                b.getUserPhone() != null ? b.getUserPhone() : "—",
-                b.getUserEmail() != null ? b.getUserEmail() : "—",
-                b.getRoomInfo(),
-                b.getCheckInDate() != null
-                    ? b.getCheckInDate().toString()
-                    : "—",
-                b.getCheckOutDate() != null
-                    ? b.getCheckOutDate().toString()
-                    : "—",
-                formatStatus(b.getStatus()),
+                    "#" + b.getId(),
+                    b.getUserName(),
+                    b.getUserPhone() != null ? b.getUserPhone() : "—",
+                    b.getUserEmail() != null ? b.getUserEmail() : "—",
+                    b.getRoomInfo(),
+                    b.getCheckInDate() != null
+                            ? b.getCheckInDate().toString()
+                            : "—",
+                    b.getCheckOutDate() != null
+                            ? b.getCheckOutDate().toString()
+                            : "—",
+                    formatStatus(b.getStatus()),
             });
         }
 
@@ -217,58 +218,159 @@ public class BookingManagementPanel extends JPanel {
 
     private void updateActionButtons() {
         actionPanel.removeAll();
+
+        JButton addBtn = createStyledButton("Добавить бронь", BLUE);
+        addBtn.addActionListener(e -> showAddBookingDialog());
+        actionPanel.add(addBtn);
+
         int row = table.getSelectedRow();
-        if (row < 0) {
-            JLabel hint = new JLabel(
-                "Выберите бронирование из таблицы для управления статусом"
-            );
-            hint.setFont(new Font("Segoe UI", Font.ITALIC, 13));
+        if (row >= 0) {
+            Booking b = bookings.get(row);
+
+            JButton deleteBtn = createStyledButton("Удалить бронь", new Color(0xC0, 0x39, 0x2B)); // Красный цвет
+            deleteBtn.addActionListener(e -> deleteBooking(b));
+            actionPanel.add(deleteBtn);
+
+            if (b.canConfirm()) {
+                JButton confirmBtn = createStyledButton("Подтвердить", GREEN);
+                confirmBtn.addActionListener(e -> confirmBooking(b));
+                actionPanel.add(confirmBtn);
+            }
+
+            if (b.canMarkPaid() && currentUser.isAdmin()) {
+                JButton paidBtn = createStyledButton("Оплачен", BLUE);
+                paidBtn.addActionListener(e -> markPaid(b));
+                actionPanel.add(paidBtn);
+            }
+
+            if (b.canMarkPaid() && !currentUser.isAdmin()) {
+                JLabel restricted = new JLabel(
+                        "<html><span style='color:#c0392b;font-size:11px; margin-left:10px;'>"
+                                + "(Только админ отмечает оплату)</span></html>");
+                actionPanel.add(restricted);
+            }
+        } else {
+            JLabel hint = new JLabel("← Выберите бронь для удаления или изменения статуса");
+            hint.setFont(new Font("Arial", Font.PLAIN, 12));
             hint.setForeground(TEXT_SEC);
             actionPanel.add(hint);
-            actionPanel.revalidate();
-            actionPanel.repaint();
-            return;
-        }
-
-        Booking b = bookings.get(row);
-
-        if (b.canConfirm()) {
-            JButton confirmBtn = createStyledButton("Подтвердить", GREEN);
-            confirmBtn.addActionListener(e -> confirmBooking(b));
-            actionPanel.add(confirmBtn);
-        }
-
-        if (b.canMarkPaid() && currentUser.isAdmin()) {
-            JButton paidBtn = createStyledButton("Отметить оплату", BLUE);
-            paidBtn.addActionListener(e -> markPaid(b));
-            actionPanel.add(paidBtn);
-        }
-
-        if (b.canMarkPaid() && !currentUser.isAdmin()) {
-            JLabel restricted = new JLabel(
-                "<html><span style='color:#D98E8E; font-size:12px; font-weight:500;'>" +
-                    "• Недостаточно прав для отметки оплаты (требуется Администратор)</span></html>"
-            );
-            actionPanel.add(restricted);
-        }
-
-        if (actionPanel.getComponentCount() == 0) {
-            JLabel done = new JLabel(
-                "Для выбранного бронирования нет доступных действий"
-            );
-            done.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-            done.setForeground(TEXT_SEC);
-            actionPanel.add(done);
         }
 
         actionPanel.revalidate();
         actionPanel.repaint();
     }
 
+    private void deleteBooking(Booking b) {
+        int confirm = JOptionPane.showConfirmDialog(mainFrame,
+                "Вы уверены, что хотите полностью удалить бронь №" + b.getId() + "?",
+                "Удаление бронирования", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                DatabaseManager.getInstance().deleteBooking(b.getId());
+                showNotification("Бронь №" + b.getId() + " успешно удалена.");
+                loadData(); // Перезагружаем таблицу
+            } catch (Exception e) {
+                showNotification("Ошибка удаления: " + e.getMessage());
+            }
+        }
+    }
+
+    private void showAddBookingDialog() {
+        JDialog dialog = new JDialog(mainFrame, "Создание бронирования", true);
+        dialog.setSize(400, 350);
+        dialog.setLocationRelativeTo(mainFrame);
+        dialog.setLayout(new GridBagLayout());
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(6, 12, 6, 12);
+
+        // Поле выбора клиента
+        c.gridx = 0; c.gridy = 0;
+        dialog.add(new JLabel("Выберите клиента:"), c);
+
+        List<User> clients = DatabaseManager.getInstance().getAllClients();
+        JComboBox<User> clientCombo = new JComboBox<>(clients.toArray(new User[0]));
+        clientCombo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object val, int idx, boolean sel, boolean foc) {
+                super.getListCellRendererComponent(list, val, idx, sel, foc);
+                if (val instanceof User u) {
+                    setText(u.getLastName() + " " + u.getFirstName() + " (" + u.getLogin() + ")");
+                }
+                return this;
+            }
+        });
+        c.gridy = 1;
+        dialog.add(clientCombo, c);
+
+        // Поле выбора комнаты
+        c.gridy = 2;
+        dialog.add(new JLabel("Выберите доступный номер:"), c);
+
+        List<com.hotel.desktop.model.Room> rooms = DatabaseManager.getInstance().getAllRooms();
+        JComboBox<com.hotel.desktop.model.Room> roomCombo = new JComboBox<>(rooms.toArray(new com.hotel.desktop.model.Room[0]));
+        c.gridy = 3;
+        dialog.add(roomCombo, c);
+
+        // Поля дат
+        c.gridy = 4;
+        dialog.add(new JLabel("Дата заезда (ГГГГ-ММ-ДД):"), c);
+        JTextField checkInField = new JTextField(LocalDate.now().toString());
+        c.gridy = 5;
+        dialog.add(checkInField, c);
+
+        c.gridy = 6;
+        dialog.add(new JLabel("Дата выезда (ГГГГ-ММ-ДД):"), c);
+        JTextField checkOutField = new JTextField(LocalDate.now().plusDays(1).toString());
+        c.gridy = 7;
+        dialog.add(checkOutField, c);
+
+        // Кнопка сохранения
+        JButton saveBtn = new JButton("Оформить бронь");
+        saveBtn.setBackground(BLUE);
+        saveBtn.setForeground(Color.WHITE);
+        saveBtn.setFont(new Font("Arial", Font.BOLD, 13));
+        saveBtn.addActionListener(e -> {
+            User selectedUser = (User) clientCombo.getSelectedItem();
+            com.hotel.desktop.model.Room selectedRoom = (com.hotel.desktop.model.Room) roomCombo.getSelectedItem();
+
+            if (selectedUser == null || selectedRoom == null) {
+                JOptionPane.showMessageDialog(dialog, "Необходимо выбрать клиента и номер!");
+                return;
+            }
+
+            try {
+                LocalDate cin = LocalDate.parse(checkInField.getText().trim());
+                LocalDate cout = LocalDate.parse(checkOutField.getText().trim());
+
+                if (!cout.isAfter(cin)) {
+                    JOptionPane.showMessageDialog(dialog, "Ошибка: Дата выезда должна быть позже даты заезда!");
+                    return;
+                }
+
+                DatabaseManager.getInstance().addBooking(selectedUser.getId(), selectedRoom.getId(), cin, cout);
+                dialog.dispose();
+                showNotification("Бронь успешно создана!");
+                loadData(); // обновляем список
+            } catch (java.time.format.DateTimeParseException ex) {
+                JOptionPane.showMessageDialog(dialog, "Неверный формат даты! Вводите в формате: ГГГГ-ММ-ДД");
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialog, "Ошибка БД: " + ex.getMessage());
+            }
+        });
+
+        c.gridy = 8; c.insets = new Insets(15, 12, 12, 12);
+        dialog.add(saveBtn, c);
+
+        dialog.setVisible(true);
+    }
+
     private void confirmBooking(Booking b) {
         DatabaseManager.getInstance().updateBookingStatus(
-            b.getId(),
-            Booking.STATUS_CONFIRMED
+                b.getId(),
+                Booking.STATUS_CONFIRMED
         );
         showNotification("Бронь №" + b.getId() + " успешно подтверждена");
         loadData();
@@ -276,11 +378,11 @@ public class BookingManagementPanel extends JPanel {
 
     private void markPaid(Booking b) {
         DatabaseManager.getInstance().updateBookingStatus(
-            b.getId(),
-            Booking.STATUS_PAID
+                b.getId(),
+                Booking.STATUS_PAID
         );
         showNotification(
-            "Статус брони №" + b.getId() + " изменён на «Оплачен»"
+                "Статус брони №" + b.getId() + " изменён на «Оплачен»"
         );
         loadData();
     }
@@ -292,19 +394,19 @@ public class BookingManagementPanel extends JPanel {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2d = (Graphics2D) g.create();
                 g2d.setRenderingHint(
-                    RenderingHints.KEY_ANTIALIASING,
-                    RenderingHints.VALUE_ANTIALIAS_ON
+                        RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON
                 );
 
                 // Эффект Hover изменения фона
                 if (getModel().isRollover()) {
                     g2d.setColor(
-                        new Color(
-                            baseColor.getRed(),
-                            baseColor.getGreen(),
-                            baseColor.getBlue(),
-                            30
-                        )
+                            new Color(
+                                    baseColor.getRed(),
+                                    baseColor.getGreen(),
+                                    baseColor.getBlue(),
+                                    30
+                            )
                     );
                     g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 25, 25);
                 }
@@ -312,14 +414,14 @@ public class BookingManagementPanel extends JPanel {
                 g2d.setColor(baseColor);
                 g2d.setStroke(new BasicStroke(1.5f));
                 g2d.draw(
-                    new RoundRectangle2D.Float(
-                        1,
-                        1,
-                        getWidth() - 3,
-                        getHeight() - 3,
-                        25,
-                        25
-                    )
+                        new RoundRectangle2D.Float(
+                                1,
+                                1,
+                                getWidth() - 3,
+                                getHeight() - 3,
+                                25,
+                                25
+                        )
                 );
                 g2d.dispose();
                 super.paintComponent(g);
@@ -345,8 +447,8 @@ public class BookingManagementPanel extends JPanel {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2d = (Graphics2D) g.create();
                 g2d.setRenderingHint(
-                    RenderingHints.KEY_ANTIALIASING,
-                    RenderingHints.VALUE_ANTIALIAS_ON
+                        RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON
                 );
                 g2d.setColor(getBackground());
                 g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 24, 24);
@@ -356,10 +458,10 @@ public class BookingManagementPanel extends JPanel {
         content.setBackground(CARD_BG);
         content.setOpaque(false);
         content.setBorder(
-            BorderFactory.createCompoundBorder(
-                new RoundBorder(BORDER, 24),
-                new EmptyBorder(24, 32, 20, 32)
-            )
+                BorderFactory.createCompoundBorder(
+                        new RoundBorder(BORDER, 24),
+                        new EmptyBorder(24, 32, 20, 32)
+                )
         );
 
         JLabel msg = new JLabel(message, SwingConstants.CENTER);
@@ -373,8 +475,8 @@ public class BookingManagementPanel extends JPanel {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2d = (Graphics2D) g.create();
                 g2d.setRenderingHint(
-                    RenderingHints.KEY_ANTIALIASING,
-                    RenderingHints.VALUE_ANTIALIAS_ON
+                        RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON
                 );
                 g2d.setColor(getBackground());
                 g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
@@ -416,29 +518,29 @@ public class BookingManagementPanel extends JPanel {
 
         @Override
         public void paintBorder(
-            Component c,
-            Graphics g,
-            int x,
-            int y,
-            int width,
-            int height
+                Component c,
+                Graphics g,
+                int x,
+                int y,
+                int width,
+                int height
         ) {
             Graphics2D g2d = (Graphics2D) g.create();
             g2d.setRenderingHint(
-                RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON
+                    RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON
             );
             g2d.setColor(color);
             g2d.setStroke(new BasicStroke(1.5f));
             g2d.draw(
-                new RoundRectangle2D.Float(
-                    x + 1,
-                    y + 1,
-                    width - 3,
-                    height - 3,
-                    radii,
-                    radii
-                )
+                    new RoundRectangle2D.Float(
+                            x + 1,
+                            y + 1,
+                            width - 3,
+                            height - 3,
+                            radii,
+                            radii
+                    )
             );
             g2d.dispose();
         }
